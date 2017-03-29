@@ -14,12 +14,14 @@
 	#overlayframe1 {
 		opacity:0;
 		transition: all 0.3s;
+		z-index: 1;
 	}
 	#overlayframe1 input[type="radio"] {
 		display: none;
 	}
 	#overlayframe1 label {
 		z-index: 3000;
+		background-color: rgba(0,0,0, 0.2);
 	}
 	#overlayframe1 input[type="radio"] + label {
 		display: block;
@@ -109,7 +111,7 @@
 				</div>
 			</form>
 		</div>
-		<video id="player" src="videos/preview.mp4" type="video/mp4">
+		<video id="player" src="videos/preview.mp4" type="video/mp4" controls>
 			Your browser does not support this streaming content.
 		</video>
 	</div>
@@ -119,12 +121,13 @@
 
 		var formSend = function (data) {
 			console.log('FormSend : ', data);
+			return false;
 		}
 
 		var myOverlay = new Overlay({
-			videoBox: myVideo,
-			element: '#overlayframe1',
-			autoplay: true,
+			videoBox: '#video_box',
+			overlay: '#overlayframe1',
+			autoplay: false,
 			start: 1,
 			stop: 8,
 			callback: formSend,

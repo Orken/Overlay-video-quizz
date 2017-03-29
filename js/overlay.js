@@ -1,8 +1,10 @@
 (function() {
   this.Overlay = function () {
-    this.element = null;
-    this.video = null;
+    this.video = null; /* La balise video */
+    this.videoBox = null; /* Le container de la vidéo et des overlays */
+    this.overlay = null; /* Les overlays */
     this.form = null;
+    this.sended = false; /* Est ce que le formulaire a été soumis */
 
     var defaults = {
       start: 0,
@@ -15,20 +17,21 @@
     if (arguments[0] && typeof arguments[0] === "object") {
       this.options = Object.assign({}, defaults, arguments[0]);
     }
-    if (this.options.videoBox) {
-      this.video = this.options.videoBox.querySelector('video');
+    this.videoBox = document.querySelector(this.options.videoBox);
+    if (this.videoBox) {
+      this.video = this.videoBox.querySelector('video');
+      this.form = this.videoBox.querySelector('form');
+      this.overlay = this.videoBox.querySelector(this.options.overlay);
     }
-    this.form = this.options.videoBox.querySelector('form');
-    this.element = this.options.videoBox.querySelector(this.options.element);
-    this.init();
-
-    if (this.options.autoplay) {
-      this.playVideo();
+    if (this.videoBox && this.video && this.overlay) {
+      this.init();
+      if (this.options.autoplay) {
+        this.playVideo();
+      }
     }
   }
 
   Overlay.prototype.playVideo = function () {
-    alert(1);
     if (this.options.fullscreen) {
       requestFullscreen(this.options.videoBox);
     }
@@ -42,87 +45,82 @@
   }
 
   Overlay.prototype.checkTime = function () {
+    if (this.sended) {
+      return;
+    }
     var time = this.video.currentTime;
     if ( ((time+0.5) > this.options.stop)) {
       this.video.currentTime = this.options.start;
     }
     if ( (time < this.options.start) || (time > this.options.stop) ) {
-      this.element.classList.remove(this.options.active);
+      this.overlay.classList.remove(this.options.active);
     }
     if ( (time > this.options.start) && (time < this.options.stop) ) {
-      this.element.classList.add(this.options.active);
+      this.overlay.classList.add(this.options.active);
     }
   }
 
-/*
- $('.fullScreenBTn.poster').on('click', function () {
-            var elem = document.getElementById($(this).data('id'));
-            if (!document.fullscreenElement &&    // alternative standard method
-                !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {  // current working methods
-                if (elem.requestFullscreen) {
-                    elem.requestFullscreen();
-                } else if (elem.msRequestFullscreen) {
-                    elem.msRequestFullscreen();
-                } else if (elem.mozRequestFullScreen) {
-                    elem.mozRequestFullScreen();
-                } else if (elem.webkitRequestFullscreen) {
-                    elem.webkitRequestFullscreen();
-                    // elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-                } else {
-                    $('.fullScreenBTn').removeClass('poster');
-                    //console.log('Echec load fullscreen...');
-                }
-                setTimeout(function () {
-                    elem.play();
-                }, 1050);
-            }
-        });
-*/
-
   var requestFullscreen = function (elem) {
-    console.log(elem);
-      if (!document.fullscreenElement &&    // alternative standard method
-          !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {  // current working methods
-          if (elem.requestFullscreen) {
-              elem.requestFullscreen();
-          } else if (elem.msRequestFullscreen) {
-              elem.msRequestFullscreen();
-          } else if (elem.mozRequestFullScreen) {
-              elem.mozRequestFullScreen();
-          } else if (elem.webkitRequestFullscreen) {
-              elem.webkitRequestFullscreen();
-              // elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-          } else {
-              //console.log('Echec load fullscreen...');
-          }
+    var isInFullScreen = (document.fullscreenElement && document.fullscreenElement !== null) ||
+      (document.webkitFullscreenElement && document.webkitFullscreenElement !== null) ||
+      (document.mozFullScreenElement && document.mozFullScreenElement !== null) ||
+      (document.msFullscreenElement && document.msFullscreenElement !== null);
+
+    if (!isInFullScreen) {
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if (elem.mozRequestFullScreen) {
+        elem.mozRequestFullScreen();
+      } else if (elem.webkitRequestFullScreen) {
+        elem.webkitRequestFullScreen();
+      } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
       }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+    }
   }
 
   var submitForm = function (e) {
-    var formData = extract(this.form);
     e.preventDefault();
     if (this.options.callback) {
-      this.options.callback(formData);
+      var formData = extract(this.form);
+      if (this.options.callback(formData)) {
+        this.sended = true;
+        this.video.currentTime = this.options.stop;
+      }
     }
   } 
 
-  function initializeEvents() {
-    if (this.video) {
-      this.video.addEventListener('timeupdate', this.checkTime.bind(this));
+  var playPause = function(e) {
+    if (e.target.nodeName === 'VIDEO') {
+      if (this.options.fullscreen) {
+        requestFullscreen(this.videoBox);
+      }
+      if (this.video.paused) {
+        this.video.play();
+      } else {
+        this.video.pause();
+      }
     }
+  }
+
+  function initializeEvents() {
+    this.video.addEventListener('timeupdate', this.checkTime.bind(this));
+    this.videoBox.addEventListener('click', playPause.bind(this));
     if (this.form) {
-      console.log('eventRegister');
       this.form.addEventListener('submit', submitForm.bind(this));
     }
   }
 
-  var serialize = function (form) {
-    if (!form || form.nodeName !== "FORM") {
-        return;
-    }
-    return extract(form).join("&");
-  }
-  
   var extract = function (form) {
     if (!form || form.nodeName !== "FORM") {
         return;
