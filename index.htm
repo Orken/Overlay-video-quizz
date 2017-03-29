@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style>
+	#video_box{
+		position:relative;
+		width:100%;
+	}
+	video {
+		width: 100%;
+	}
+	#overlayframe1 {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(0,0,);
+		opacity:0;
+		transition: all 0.3s;
+		z-index: 3000;
+	}
+	#overlayframe1.active {
+		opacity:1;
+	}
+	</style>
+</head>
+<body>
+	<div id="video_box">
+		<div id="overlayframe1">
+			<form id="form1">
+				<div id="question1">
+					<input type="radio" checked name="check1" value="0" id="check1-1">
+					<label for="check1-1"></label>
+					<input type="radio" name="check1" value="1" id="check1-2">
+					<label for="check1-2"></label>
+				</div>
+				<div id="question2">
+					<input type="radio" name="check2" value="0" id="check2-1">
+					<label for="check2-1"></label>
+					<input type="radio" checked name="check2" value="1" id="check2-2">
+					<label for="check2-2"></label>
+				</div>
+				<div>
+					<button type='submit'>Valider</button>
+				</div>
+			</form>
+		</div>
+		<video id="player" src="videos/preview.mp4" type="video/mp4">
+			Your browser does not support this streaming content.
+		</video>
+	</div>
+	<script src="js/overlay.js"></script>
+	<script>
+		var myVideo = document.querySelector('#video_box');
+
+		var formSend = function (data) {
+			console.log('FormSend : ', data);
+		}
+
+		var myOverlay = new Overlay({
+			videoBox: myVideo,
+			element: '#overlayframe1',
+			autoplay: true,
+			start: 2,
+			stop: 6,
+			callback: formSend
+		});
+	</script>
+</body>
+</html>
