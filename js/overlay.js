@@ -23,9 +23,18 @@
     this.init();
 
     if (this.options.autoplay) {
-      this.video.play();
+      this.playVideo();
     }
   }
+
+  Overlay.prototype.playVideo = function () {
+    alert(1);
+    if (this.options.fullscreen) {
+      requestFullscreen(this.options.videoBox);
+    }
+    this.video.play()
+  }  
+
 
   Overlay.prototype.init = function () {
     var theend = this; /* Because 'this is theend' */
@@ -43,6 +52,50 @@
     if ( (time > this.options.start) && (time < this.options.stop) ) {
       this.element.classList.add(this.options.active);
     }
+  }
+
+/*
+ $('.fullScreenBTn.poster').on('click', function () {
+            var elem = document.getElementById($(this).data('id'));
+            if (!document.fullscreenElement &&    // alternative standard method
+                !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {  // current working methods
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.msRequestFullscreen) {
+                    elem.msRequestFullscreen();
+                } else if (elem.mozRequestFullScreen) {
+                    elem.mozRequestFullScreen();
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                    // elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+                } else {
+                    $('.fullScreenBTn').removeClass('poster');
+                    //console.log('Echec load fullscreen...');
+                }
+                setTimeout(function () {
+                    elem.play();
+                }, 1050);
+            }
+        });
+*/
+
+  var requestFullscreen = function (elem) {
+    console.log(elem);
+      if (!document.fullscreenElement &&    // alternative standard method
+          !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {  // current working methods
+          if (elem.requestFullscreen) {
+              elem.requestFullscreen();
+          } else if (elem.msRequestFullscreen) {
+              elem.msRequestFullscreen();
+          } else if (elem.mozRequestFullScreen) {
+              elem.mozRequestFullScreen();
+          } else if (elem.webkitRequestFullscreen) {
+              elem.webkitRequestFullscreen();
+              // elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+          } else {
+              //console.log('Echec load fullscreen...');
+          }
+      }
   }
 
   var submitForm = function (e) {
