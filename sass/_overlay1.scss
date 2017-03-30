@@ -44,7 +44,7 @@ video {
 		}
 	}
 	input[type="radio"] {
-		&#check1-1, &#check1-2, &#check2-1, &#check2-2 {
+		&#check1-1, &#check1-2, &#check2-1, &#check2-2, &#check3-1, &#check3-2 {
 			+ label {
 	    		position: absolute;
 			}
@@ -123,17 +123,17 @@ video {
 #overlayframe2 {
 	input[type="radio"] {
 		+ label {
-			height:5%;
+			height:30%;
 		}
 		&#check3-1 + label {
 		    left: 22%;
-		    top: 41.5%;
-		    width:55%;
+		    top: 30%;
+		    width:25%;
 		}
 		&#check3-2 + label {
-			left: 22%;
-			top: 47.9%;
-			width: 43%;
+			left: 53%;
+			top: 30%;
+			width: 25%;
 		}
 	}
 }
