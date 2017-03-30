@@ -3,117 +3,47 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Document</title>
-	<style>
-	#video_box{
-		position:relative;
-		width:100%;
-	}
-	video {
-		width: 100%;
-	}
-	#overlayframe1 {
-		opacity:0;
-		transition: all 0.3s;
-		z-index: 1;
-	}
-	#overlayframe1 input[type="radio"] {
-		display: none;
-	}
-	#overlayframe1 label {
-		z-index: 3000;
-		background-color: rgba(0,0,0, 0.2);
-	}
-	#overlayframe1 input[type="radio"] + label {
-		display: block;
-		/* background-color: rgba(0,0,0,0.3); */
-		border-radius:5px;
-	}
-	#overlayframe1 input[type="radio"]:checked + label {
-		display: block;
-		/* background-color: rgba(255,0,0,0.3); */
-	}
-	#overlayframe1 input[type="radio"]#check1-1 + label,
-	#overlayframe1 input[type="radio"]#check1-2 + label,
-	#overlayframe1 input[type="radio"]#check2-1 + label,
-	#overlayframe1 input[type="radio"]#check2-2 + label {
-	    position: absolute;
-	}
-	#overlayframe1 input[type="radio"]:checked + label:before {
-		content:'';
-		display: block;
-		width:1.5vw;
-		height:1.5vw;
-		background-color: red;
-		border-radius: 50%;
-	    left: 2.7vw;
-	    position: absolute;
-	    top: 0;
-    	}
-	#overlayframe1 input[type="radio"]#check1-1 + label {
-	    left: 22%;
-	    right: 23%;
-	    bottom: 54%;
-	    top: 43%;
-    }
-	#overlayframe1 input[type="radio"]#check1-2 + label {
-		left: 22%;
-    	right: 35%;
-    	top: 49.4%;
-    	bottom: 47.75%;
-    }
-	#overlayframe1 input[type="radio"]#check2-1 + label {
-	    left: 22%;
-	    right: 35%;
-	    top: 66%;
-	    bottom: 31%;
-    }
-	#overlayframe1 input[type="radio"]#check2-2 + label {
-		left: 22%;
-		right: 35%;
-		top: 72.4%;
-		bottom: 24.8%;
-    }
-
-	#overlayframe1 #valid1{
-		position: absolute;
-		z-index: 3000;
-		left:45%;
-		right:45%;
-		bottom:5%;
-		top:85%;
-		border:none;
-		width:5%;
-		background-color: red;
-	}
-	#overlayframe1.active {
-		opacity:1;
-	}
-	</style>
+	<link rel="stylesheet" href="dist/style.css">
 </head>
 <body>
-	<div id="video_box">
-		<div id="overlayframe1">
-			<form id="form1">
-				<div id="question1">
-					<input type="radio" checked name="check1" value="0" id="check1-1">
-					<label for="check1-1"></label>
-					<input type="radio" name="check1" value="1" id="check1-2">
-					<label for="check1-2"></label>
-				</div>
-				<div id="question2">
-					<input type="radio" name="check2" value="0" id="check2-1">
-					<label for="check2-1"></label>
-					<input type="radio" checked name="check2" value="1" id="check2-2">
-					<label for="check2-2"></label>
-				</div>
-				<div id="valid1">
-					<button type='submit'>Valider</button>
-				</div>
-			</form>
+	<div class="container">
+		<div id="video_box">
+			<div id="overlayframe1">
+				<form id="form1">
+					<div id="question1">
+						<input type="radio" name="check1" value="0" id="check1-1">
+						<label for="check1-1"></label>
+						<input type="radio" name="check1" value="1" id="check1-2">
+						<label for="check1-2"></label>
+					</div>
+					<div id="question2">
+						<input type="radio" name="check2" value="0" id="check2-1">
+						<label for="check2-1"></label>
+						<input type="radio" name="check2" value="1" id="check2-2">
+						<label for="check2-2"></label>
+					</div>
+					<div id="valid1">
+						<button type='submit'>Valider</button>
+					</div>
+				</form>
+			</div>
+			<div id="overlayframe2">
+				<form id="form2">
+					<div id="question1">
+						<input type="radio" name="check1" value="0" id="check1-1">
+						<label for="check1-1"></label>
+						<input type="radio" name="check1" value="1" id="check1-2">
+						<label for="check1-2"></label>
+					</div>
+					<div id="valid1">
+						<button type='submit'>Valider</button>
+					</div>
+				</form>
+			</div>
+			<video id="player" src="videos/preview.mp4" type="video/mp4" controls>
+				Your browser does not support this streaming content.
+			</video>
 		</div>
-		<video id="player" src="videos/preview.mp4" type="video/mp4" controls>
-			Your browser does not support this streaming content.
-		</video>
 	</div>
 	<script src="js/overlay.js?5464"></script>
 	<script>
@@ -121,17 +51,39 @@
 
 		var formSend = function (data) {
 			console.log('FormSend : ', data);
-			return false;
+			var response = [
+				{	
+					action: 'pauseVideo'
+				},
+				{
+					action: 'playAudio',
+					id: Number(data.check1)
+				},
+				{
+					action: 'playAudio',
+					id: Number(data.check2) + 2
+				},
+				{
+					action: 'playVideo'
+				}
+			];
+			return response;
 		}
 
 		var myOverlay = new Overlay({
 			videoBox: '#video_box',
 			overlay: '#overlayframe1',
-			autoplay: false,
+			autoplay: true,
 			start: 1,
-			stop: 8,
+			stop: 4,
 			callback: formSend,
-			fullscreen: true
+			fullscreen: true,
+			audios: [
+				'audios/faire_beneficier_de_votre_experience.mp3',
+				'audios/connaitre_la_vision_de_votre_collaborateur.mp3',
+				'audios/donner_un_poisson.mp3',
+				'audios/apprendre_a_pecher.mp3'
+			]
 		});
 	</script>
 </body>

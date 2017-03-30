@@ -5,6 +5,8 @@
     this.overlay = null; /* Les overlays */
     this.form = null;
     this.sended = false; /* Est ce que le formulaire a été soumis */
+    this.audios = []; /* fichiers audio preloadés */
+    this.events = [];
 
     var defaults = {
       start: 0,
@@ -12,6 +14,17 @@
       autoplay: false,
       active: 'active',
       callback: null
+    }
+
+    var initializeEvents =  function () {
+      this.video.addEventListener('timeupdate', checkTime.bind(this));
+      this.videoBox.addEventListener('click', playPause.bind(this));
+      if (this.form) {
+        this.form.addEventListener('submit', submitForm.bind(this));
+      }
+      this.videoBox.addEventListener('newevents', addEvents.bind(this));
+      this.videoBox.addEventListener('startevent', startEvent.bind(this));
+      this.videoBox.addEventListener('stopevent', stopEvent.bind(this));
     }
 
     if (arguments[0] && typeof arguments[0] === "object") {
@@ -24,7 +37,14 @@
       this.overlay = this.videoBox.querySelector(this.options.overlay);
     }
     if (this.videoBox && this.video && this.overlay) {
-      this.init();
+      initializeEvents.call(this);
+      if (this.options.audios && this.options.audios.length>0) {
+        var l = this.options.audios.length;
+        for (var i=0;i<l;i++) {
+          this.audios.push(new Audio(this.options.audios[i]));
+          this.audios[i].load();
+        }
+      }
       if (this.options.autoplay) {
         this.playVideo();
       }
@@ -38,18 +58,18 @@
     this.video.play()
   }  
 
+  Overlay.prototype.playAudio = function (id) {
+    this.audios[id].currentTime = 0;
+    this.audios[id].play();
+  }
 
   Overlay.prototype.init = function () {
-    var theend = this; /* Because 'this is theend' */
     initializeEvents.call(this);
   }
 
-  Overlay.prototype.checkTime = function () {
-    if (this.sended) {
-      return;
-    }
+  var checkTime = function () {
     var time = this.video.currentTime;
-    if ( ((time+0.5) > this.options.stop)) {
+    if (!this.sended && ((time+0.5) > this.options.stop)) {
       this.video.currentTime = this.options.start;
     }
     if ( (time < this.options.start) || (time > this.options.stop) ) {
@@ -59,6 +79,83 @@
       this.overlay.classList.add(this.options.active);
     }
   }
+
+  var submitForm = function (e) {
+    e.preventDefault();
+    if (this.options.callback) {
+      var formData = extract(this.form);
+      var result = this.options.callback(formData);
+      if (result !== false) {
+        this.sended = true;
+        var newevents = new CustomEvent('newevents', {detail:{result: result}});
+        this.videoBox.dispatchEvent(newevents);
+      }
+    }
+  } 
+
+  var playPause = function(e) {
+    if (e.target.nodeName === 'VIDEO') {
+      if (this.options.fullscreen) {
+        requestFullscreen(this.videoBox);
+      }
+      if (this.video.paused) {
+        this.video.play();
+      } else {
+        this.video.pause();
+      }
+    }
+  }
+
+  var dispatchStartEvent = function (event) {
+    var newevent = new CustomEvent('startevent', {detail: {
+      event: event
+    }});
+    this.videoBox.dispatchEvent(newevent);
+  }
+
+  var dispatchStopEvent = function () {
+    var newevent = new CustomEvent('stopevent',{detail : {}});
+    this.videoBox.dispatchEvent(newevent);
+  }
+
+  var addEvents = function (e, r) {
+    this.events = e.detail.result;
+    var event = this.events.shift();
+    dispatchStartEvent.call(this,event);
+  }
+
+  var startEvent = function (e, r) {
+    switch (e.detail.event.action) {
+      case 'pauseVideo':
+        this.video.pause();
+        dispatchStopEvent.call(this);
+        break;
+      case 'playAudio':
+        var that = this;
+        var audio = this.audios[e.detail.event.id];
+        var nextEvent = function (e) {
+          console.log(e, this);
+          dispatchStopEvent.call(that);
+          audio.removeEventListener('ended', nextEvent);
+        }
+        var audioevent = audio.addEventListener('ended', nextEvent);
+        this.audios[e.detail.event.id].play();
+        break;
+      case 'playVideo':
+        this.video.currentTime = this.options.stop;
+        this.video.play();
+        dispatchStopEvent.call(this);
+        break;
+    }
+  }
+  
+  var stopEvent = function (e, r) {
+    if (this.events.length>0) {
+      var event = this.events.shift();
+      dispatchStartEvent.call(this, event);
+    }
+  }
+
 
   var requestFullscreen = function (elem) {
     var isInFullScreen = (document.fullscreenElement && document.fullscreenElement !== null) ||
@@ -86,38 +183,6 @@
       } else if (document.msExitFullscreen) {
         document.msExitFullscreen();
       }
-    }
-  }
-
-  var submitForm = function (e) {
-    e.preventDefault();
-    if (this.options.callback) {
-      var formData = extract(this.form);
-      if (this.options.callback(formData)) {
-        this.sended = true;
-        this.video.currentTime = this.options.stop;
-      }
-    }
-  } 
-
-  var playPause = function(e) {
-    if (e.target.nodeName === 'VIDEO') {
-      if (this.options.fullscreen) {
-        requestFullscreen(this.videoBox);
-      }
-      if (this.video.paused) {
-        this.video.play();
-      } else {
-        this.video.pause();
-      }
-    }
-  }
-
-  function initializeEvents() {
-    this.video.addEventListener('timeupdate', this.checkTime.bind(this));
-    this.videoBox.addEventListener('click', playPause.bind(this));
-    if (this.form) {
-      this.form.addEventListener('submit', submitForm.bind(this));
     }
   }
 

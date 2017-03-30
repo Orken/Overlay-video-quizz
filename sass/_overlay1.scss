@@ -1,0 +1,124 @@
+#video_box{
+	position:relative;
+	width:100%;
+}
+video {
+	width: 100%;
+}
+#overlayframe1, #overlayframe2 {
+	opacity:0;
+	transition: all 0.3s;
+	z-index: 1;
+	input[type="radio"] {
+		display: none;
+	}
+	label {
+		z-index: 3000;
+		background-color: rgba(0,0,0, 0.08);
+	}
+	input[type="radio"] + label {
+		display: block;
+		border: none;
+		border-bottom: solid 4px #ccc;
+		cursor:pointer;
+		transition: all 0.2s ease-in-out;
+		&:hover {
+			border-color: rgba(255,0,0,0.25);
+		}
+	}
+	input[type="radio"]:checked {
+		+ label {
+			display: block;
+			border-bottom: solid 4px red;
+			&:before {
+				/*content:'';*/
+				display: block;
+				width:1.5vw;
+				height:1.5vw;
+				background-color: red;
+				border-radius: 50%;
+			    left: 2.7vw;
+			    //position: absolute;
+			    top: 0;
+			}
+		}
+	}
+	input[type="radio"] {
+		&#check1-1, &#check1-2, &#check2-1, &#check2-2 {
+			+ label {
+	    		position: absolute;
+			}
+		}
+	}
+
+	button {
+		cursor:pointer;
+		position: absolute;
+		z-index: 3000;
+		display: block;
+		left:42%;
+		right:42%;
+		bottom:9%;
+		top:82%;
+		width:16%;
+		font-size: large;
+		background-color: #e0e0e0;
+		border: none;
+		border-bottom: solid 4px #ccc;
+		color:#666;
+		&:hover {
+			border: none;
+			border-bottom: solid 4px red;
+			color:red;
+		}
+	}
+	&.active {
+		opacity:1;
+	}
+}
+
+#overlayframe1 {
+	input[type="radio"] {
+		+ label {
+			height:5%;
+		}
+		&#check1-1 + label {
+		    left: 22%;
+		    top: 41.5%;
+		    width:55%;
+		}
+		&#check1-2 + label {
+			left: 22%;
+			top: 47.9%;
+			width: 43%;
+		}
+		&#check2-1 + label {
+		    left: 22%;
+		    top: 64.5%;
+			width: 23%;
+		}
+		&#check2-2 + label {
+			left: 22%;
+			top: 71%;
+			width: 24%;
+		}
+	}
+}
+
+#overlayframe2 {
+	input[type="radio"] {
+		&#check1-1 + label {
+		    left: 22%;
+		    right: 23%;
+		    bottom: 54%;
+		    top: 43%;
+		}
+		&#check1-1 + label {
+		    left: 22%;
+		    right: 23%;
+		    bottom: 54%;
+		    top: 43%;
+		}
+	}
+}
+
