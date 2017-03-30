@@ -122,17 +122,18 @@ video {
 
 #overlayframe2 {
 	input[type="radio"] {
-		&#check1-1 + label {
-		    left: 22%;
-		    right: 23%;
-		    bottom: 54%;
-		    top: 43%;
+		+ label {
+			height:5%;
 		}
-		&#check1-1 + label {
+		&#check3-1 + label {
 		    left: 22%;
-		    right: 23%;
-		    bottom: 54%;
-		    top: 43%;
+		    top: 41.5%;
+		    width:55%;
+		}
+		&#check3-2 + label {
+			left: 22%;
+			top: 47.9%;
+			width: 43%;
 		}
 	}
 }

@@ -1,65 +1,39 @@
 (function() {
   this.Overlay = function () {
-    this.video = null; /* La balise video */
+
     this.videoBox = null; /* Le container de la vidéo et des overlays */
+    this.video = null; /* La balise video */
+
     this.overlay = null; /* Les overlays */
-    this.form = null; /* le formulaire du quiz */
-    this.button = null; /* le button submit du formulaire du quiz */
+    this.form = false; /* le formulaire du quiz */
+    this.button = false; /* le button submit du formulaire du quiz */
     this.sended = false; /* Est ce que le formulaire a été soumis */
+    this.callback = false;
+    this.validation = false;
     this.audios = []; /* fichiers audio preloadés */
     this.events = []; /* Les evennement à enchainer apres la réponse */
 
     var defaults = {
-      start: 0,
-      stop: false,
+      overlays: [],
       autoplay: false,
+      fullscreen: false,
       active: 'active',
-      callback: null,
-      validation: null
     }
 
     if (arguments[0] && typeof arguments[0] === "object") {
       this.options = Object.assign({}, defaults, arguments[0]);
     }
 
-    var initializeEvents =  function () {
-      this.video.addEventListener('timeupdate', checkTime.bind(this));
-      this.videoBox.addEventListener('click', playPause.bind(this));
-      if (this.form) {
-        this.form.addEventListener('submit', submitForm.bind(this));
-
-        if (this.options.validation) {
-          var inputs = this.form.querySelectorAll('input');
-          for (var i = 0; i < inputs.length; i++) {
-              inputs[i].addEventListener('change', validateForm.bind(this));
-          }
-        }
-      }
-      this.videoBox.addEventListener('newevents', addEvents.bind(this));
-      this.videoBox.addEventListener('startevent', startEvent.bind(this));
-      this.videoBox.addEventListener('stopevent', stopEvent.bind(this));
-    }
-
-
     this.videoBox = document.querySelector(this.options.videoBox);
     if (this.videoBox) {
       this.video = this.videoBox.querySelector('video');
-      this.form = this.videoBox.querySelector('form');
-      this.button = (this.form)?this.form.querySelector('button[type=submit]'):false;
-      this.overlay = this.videoBox.querySelector(this.options.overlay);
+      // this.form = this.videoBox.querySelector('form');
+      // this.button = (this.form)?this.form.querySelector('button[type=submit]'):false;
+      // this.overlay = this.videoBox.querySelector(this.options.overlay);
     }
-    if (this.options.validation) {
-      validateForm.call(this,this.form);
-    }
-    if (this.videoBox && this.video && this.overlay) {
+    // if (this.videoBox && this.video && this.overlay) {
+    if (this.videoBox && this.video) {
       initializeEvents.call(this);
-      if (this.options.audios && this.options.audios.length>0) {
-        var l = this.options.audios.length;
-        for (var i=0;i<l;i++) {
-          this.audios.push(new Audio(this.options.audios[i]));
-          this.audios[i].load();
-        }
-      }
       if (this.options.autoplay) {
         this.playVideo();
       }
@@ -78,39 +52,93 @@
     this.audios[id].play();
   }
 
-  Overlay.prototype.init = function () {
-    initializeEvents.call(this);
+  var initializeEvents =  function () {
+    this.video.addEventListener('timeupdate', checkTime.bind(this));
+    this.videoBox.addEventListener('click', playPause.bind(this));
+    this.videoBox.addEventListener('newevents', addEvents.bind(this));
+    this.videoBox.addEventListener('startevent', startEvent.bind(this));
+    this.videoBox.addEventListener('stopevent', stopEvent.bind(this));
+  }
+
+  var initializeAudio = function (audios) {
+    if (audios && audios.length>0) {
+      var l = audios.length;
+      for (var i=0;i<l;i++) {
+        this.audios.push(new Audio(audios[i]));
+        this.audios[i].load();
+      }
+    }
   }
 
   var checkTime = function () {
     var time = this.video.currentTime;
-    if (!this.sended && ((time+0.5) > this.options.stop)) {
-      this.video.currentTime = this.options.start;
-    }
-    if ( (time < this.options.start) || (time > this.options.stop) ) {
-      this.overlay.classList.remove(this.options.active);
-    }
-    if ( (time > this.options.start) && (time < this.options.stop) ) {
-      this.overlay.classList.add(this.options.active);
-    }
+    console.log(this.overlay);
+    this.options.overlays.forEach(function (overlay, index) {
+      if (overlay.active==undefined) {
+        overlay.active = false;
+      }
+      if (overlay.sended === undefined) {
+        overlay.sended = false;
+      }
+      overlay.layerElement = this.videoBox.querySelector(overlay.layer);
+      if (!overlay.sended && ((time+0.5) > overlay.stop)) {
+        this.video.currentTime = overlay.start;
+      }
+      if ( ((time < overlay.start) || (time > overlay.stop)) && overlay.active===true) {
+        this.form.removeEventListener('submit', submitForm.bind(this));
+        this.overlay = false;
+        this.form = false;
+        this.button = false;
+        this.callback = false;
+        this.validation = false;
+        this.audios = [];
+        overlay.layerElement.classList.remove(this.options.active);
+        overlay.active = false;
+      }
+      if ( (time > overlay.start) && (time < overlay.stop) && overlay.active===false ) {
+        this.overlay = this.options.overlays[index];
+        this.form = overlay.layerElement.querySelector('form');
+        this.button = this.form.querySelector('button[type=submit]');
+        this.callback = overlay.callback;
+        this.validation = overlay.validation;
+        initializeAudio.call(this, overlay.audios);
+        if (this.form) {
+          this.form.addEventListener('submit', submitForm.bind(this));
+          if (this.validation) {
+            var inputs = this.form.querySelectorAll('input');
+            for (var i = 0; i < inputs.length; i++) {
+              console.log('input', i);
+              inputs[i].addEventListener('change', validateForm.bind(this));
+            }
+          }
+        }
+        validateForm.call(this,this.form);
+        overlay.active = true;
+        overlay.layerElement.classList.add(this.options.active);
+      }
+    }, this);
+
   }
 
   var submitForm = function (e) {
     e.preventDefault();
+    console.log(e);
     this.button.disabled = true;
-    if (this.options.callback) {
+    if (this.callback) {
       var formData = extract(this.form);
-      var result = this.options.callback(formData);
+      var result = this.callback(formData);
       if (result !== false) {
-        this.sended = true;
+        this.overlay.sended = true;
         var newevents = new CustomEvent('newevents', {detail:{result: result}});
         this.videoBox.dispatchEvent(newevents);
       }
+    } else {
+      this.sended = true;
     }
   } 
 
   var validateForm = function (e) {
-    var isOk = this.options.validation(extract(this.form));
+    var isOk = this.validation(extract(this.form));
     if (this.button) {
       this.button.disabled = !isOk;
     }
@@ -157,6 +185,7 @@
       case 'playAudio':
         var that = this;
         var audio = this.audios[e.detail.event.id];
+        console.log(audio);
         var nextEvent = function (e) {
           dispatchStopEvent.call(that);
           audio.removeEventListener('ended', nextEvent);
