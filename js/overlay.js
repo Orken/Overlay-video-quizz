@@ -3,17 +3,23 @@
     this.video = null; /* La balise video */
     this.videoBox = null; /* Le container de la vidéo et des overlays */
     this.overlay = null; /* Les overlays */
-    this.form = null;
+    this.form = null; /* le formulaire du quiz */
+    this.button = null; /* le button submit du formulaire du quiz */
     this.sended = false; /* Est ce que le formulaire a été soumis */
     this.audios = []; /* fichiers audio preloadés */
-    this.events = [];
+    this.events = []; /* Les evennement à enchainer apres la réponse */
 
     var defaults = {
       start: 0,
       stop: false,
       autoplay: false,
       active: 'active',
-      callback: null
+      callback: null,
+      validation: null
+    }
+
+    if (arguments[0] && typeof arguments[0] === "object") {
+      this.options = Object.assign({}, defaults, arguments[0]);
     }
 
     var initializeEvents =  function () {
@@ -21,20 +27,29 @@
       this.videoBox.addEventListener('click', playPause.bind(this));
       if (this.form) {
         this.form.addEventListener('submit', submitForm.bind(this));
+
+        if (this.options.validation) {
+          var inputs = this.form.querySelectorAll('input');
+          for (var i = 0; i < inputs.length; i++) {
+              inputs[i].addEventListener('change', validateForm.bind(this));
+          }
+        }
       }
       this.videoBox.addEventListener('newevents', addEvents.bind(this));
       this.videoBox.addEventListener('startevent', startEvent.bind(this));
       this.videoBox.addEventListener('stopevent', stopEvent.bind(this));
     }
 
-    if (arguments[0] && typeof arguments[0] === "object") {
-      this.options = Object.assign({}, defaults, arguments[0]);
-    }
+
     this.videoBox = document.querySelector(this.options.videoBox);
     if (this.videoBox) {
       this.video = this.videoBox.querySelector('video');
       this.form = this.videoBox.querySelector('form');
+      this.button = (this.form)?this.form.querySelector('button[type=submit]'):false;
       this.overlay = this.videoBox.querySelector(this.options.overlay);
+    }
+    if (this.options.validation) {
+      validateForm.call(this,this.form);
     }
     if (this.videoBox && this.video && this.overlay) {
       initializeEvents.call(this);
@@ -82,6 +97,7 @@
 
   var submitForm = function (e) {
     e.preventDefault();
+    this.button.disabled = true;
     if (this.options.callback) {
       var formData = extract(this.form);
       var result = this.options.callback(formData);
@@ -92,6 +108,14 @@
       }
     }
   } 
+
+  var validateForm = function (e) {
+    var isOk = this.options.validation(extract(this.form));
+    if (this.button) {
+      this.button.disabled = !isOk;
+    }
+    return isOk;
+  }
 
   var playPause = function(e) {
     if (e.target.nodeName === 'VIDEO') {
@@ -134,15 +158,17 @@
         var that = this;
         var audio = this.audios[e.detail.event.id];
         var nextEvent = function (e) {
-          console.log(e, this);
           dispatchStopEvent.call(that);
           audio.removeEventListener('ended', nextEvent);
         }
         var audioevent = audio.addEventListener('ended', nextEvent);
         this.audios[e.detail.event.id].play();
         break;
+      case 'jumpTo':
+        this.video.currentTime = e.detail.event.time;
+        dispatchStopEvent.call(this);
+        break;        
       case 'playVideo':
-        this.video.currentTime = this.options.stop;
         this.video.play();
         dispatchStopEvent.call(this);
         break;

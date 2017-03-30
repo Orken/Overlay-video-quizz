@@ -40,17 +40,14 @@
 					</div>
 				</form>
 			</div>
-			<video id="player" src="videos/preview.mp4" type="video/mp4" controls>
+			<video id="player" src="videos/Debrief_CH3_prevue_03.mp4" type="video/mp4" controls>
 				Your browser does not support this streaming content.
 			</video>
 		</div>
 	</div>
 	<script src="js/overlay.js?5464"></script>
 	<script>
-		var myVideo = document.querySelector('#video_box');
-
 		var formSend = function (data) {
-			console.log('FormSend : ', data);
 			var response = [
 				{	
 					action: 'pauseVideo'
@@ -64,6 +61,10 @@
 					id: Number(data.check2) + 2
 				},
 				{
+					action: 'jumpTo',
+					time: 290
+				},
+				{
 					action: 'playVideo'
 				}
 			];
@@ -74,10 +75,13 @@
 			videoBox: '#video_box',
 			overlay: '#overlayframe1',
 			autoplay: true,
-			start: 1,
-			stop: 4,
+			start: 270.5,
+			stop: 271,
 			callback: formSend,
 			fullscreen: true,
+			validation: function (data) {
+				return data.check1!=undefined && data.check2!=undefined;
+			},
 			audios: [
 				'audios/faire_beneficier_de_votre_experience.mp3',
 				'audios/connaitre_la_vision_de_votre_collaborateur.mp3',

@@ -66,10 +66,25 @@ video {
 		border: none;
 		border-bottom: solid 4px #ccc;
 		color:#666;
-		&:hover {
-			border: none;
-			border-bottom: solid 4px red;
+		letter-spacing: 1pt;
+	    transform: scale(0.8,1);
+	    font-weight: bold;
+	    font-size: 120%;
+	    opacity:1;
+	    transition: all 0.3s;
+		&:disabled {
+			cursor: default;
+			opacity: 0;
+			background-color: #f0f0f0;
+			border-bottom: solid 4px rgba(0,0,0,0.1);
+		}
+		&:not(:disabled) {
 			color:red;
+			&:hover {
+				border: none;
+				border-bottom: solid 4px red;
+				color:red;
+			}
 		}
 	}
 	&.active {
